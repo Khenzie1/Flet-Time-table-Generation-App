@@ -1,0 +1,39 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+tests/
+
+# Local DB (if SQLite)
+*.db
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Alembic (optional — only ignore if you don't want migrations tracked)
+# alembic/versions/
+
+#Irrelevant files
+# backend/
+auth.py, database.py, main.py
+
+# Seeding & reset scripts (dev-only):
+seed_data.py, seed_school.py
+reset_admin_neon.py, reset_admin_password.py, reset_and_create.py
+flush_remote_data.py
+
+# Test & debug scripts:
+test_neon.py, check_remote.py
+
+# frontend/
+local_db.py, sync_engine.py — duplicates of what's in app/
+fix_database_schema.py, verify_schema.py
+quick_test.py, test_screens.py, test_status_update.py
+reseed_data.py, seed_local_db.py

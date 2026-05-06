@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: timetable_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-timetable_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-SecurePassword123!}
+      POSTGRES_DB: ${POSTGRES_DB:-timetable_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-timetable_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - timetable_network
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: timetable_backend
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-timetable_user}:${POSTGRES_PASSWORD:-SecurePassword123!}@db:5432/${POSTGRES_DB:-timetable_db}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-jwt-key-change-in-production}
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - REFRESH_TOKEN_EXPIRE_DAYS=30
+      - BCRYPT_ROUNDS=12
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - timetable_network
+
+volumes:
+  postgres_data:
+
+networks:
+  timetable_network:
+    driver: bridge
