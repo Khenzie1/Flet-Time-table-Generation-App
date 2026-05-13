@@ -16,7 +16,7 @@ DATA_DIR.mkdir(exist_ok=True)
 CACHE_DIR.mkdir(exist_ok=True)
 
 # Server configuration
-SERVER_URL = os.getenv("SERVER_URL")
+SERVER_URL = os.getenv("SERVER_URL", "https://flet-time-table-generation-app.onrender.com")
 API_BASE_URL = f"{SERVER_URL}/api/v1"
 
 # Database configuration
