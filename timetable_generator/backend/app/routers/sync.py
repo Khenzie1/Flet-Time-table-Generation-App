@@ -88,7 +88,7 @@ async def sync_push(
 
     # Process in FK-safe order
     order = [
-        "teachers", "subjects", "classes", "rooms", "periods",
+        "teachers", "subjects", "rooms", "classes", "periods",
         "timetables", "timetable_slots", "class_subjects",
     ]
 
