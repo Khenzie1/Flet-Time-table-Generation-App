@@ -105,7 +105,7 @@ async def sync_push(
             try:
                 # Strip to valid columns only
                 clean = {k: v for k, v in row.items()
-                         if k in valid_cols and v is not None}
+                         if k in valid_cols and v is not None and str(v) != 'None'}
 
                 if not clean.get("id"):
                     continue
