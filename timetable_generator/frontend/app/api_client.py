@@ -48,7 +48,7 @@ _ENTITY_FIELDS = {
 
 
 class ApiClient:
-    def __init__(self, base_url: str = "http://localhost:8000/api/v1"):
+    def __init__(self, base_url: str = "https://flet-time-table-generation-app.onrender.com/api/v1"):
         self.base_url     = base_url.rstrip("/")
         self.offline_mode = True
         self.token: Optional[str] = None
