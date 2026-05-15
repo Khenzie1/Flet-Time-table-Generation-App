@@ -69,6 +69,19 @@ async def _get_school_id(current_user: User, db: AsyncSession) -> Optional[str]:
         return None
 
 
+def _parse_value(k: str, v: Any) -> Any:
+    """Clean and convert a single field value for PostgreSQL insertion."""
+    if v is None or str(v).strip() == 'None':
+        return None
+    if k in ('created_at', 'updated_at'):
+        if isinstance(v, str):
+            try:
+                return datetime.fromisoformat(v)
+            except Exception:
+                return None
+    return v
+
+
 # ── PUSH ─────────────────────────────────────────────────────────────────────
 
 @router.post("/push", response_model=SyncPushResponse)
@@ -103,9 +116,14 @@ async def sync_push(
 
         for row in rows:
             try:
-                # Strip to valid columns only
-                clean = {k: v for k, v in row.items()
-                         if k in valid_cols and v is not None and str(v) != 'None'}
+                # Strip to valid columns only, parse timestamps, drop None/'None'
+                clean = {}
+                for k, v in row.items():
+                    if k not in valid_cols:
+                        continue
+                    parsed = _parse_value(k, v)
+                    if parsed is not None:
+                        clean[k] = parsed
 
                 if not clean.get("id"):
                     continue
@@ -161,12 +179,11 @@ async def sync_pull(
         try:
             query = select(model)
             # Filter by school where applicable
-            if (school_id
-                    and hasattr(model, "school_id")):
+            if (school_id and hasattr(model, "school_id")):
                 query = query.where(model.school_id == school_id)
 
             result = await db.execute(query)
-            rows   = result.scalars().all()
+            rows = result.scalars().all()
 
             serialized = []
             for row in rows:
@@ -188,7 +205,7 @@ async def sync_pull(
 
             snapshot[table_name] = serialized
 
-        except Exception as ex:
+        except Exception:
             snapshot[table_name] = []
 
     return SyncPullResponse(
