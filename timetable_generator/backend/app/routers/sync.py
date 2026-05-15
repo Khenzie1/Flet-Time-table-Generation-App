@@ -132,14 +132,15 @@ async def sync_push(
                 if "school_id" in valid_cols and school_id:
                     clean["school_id"] = school_id
 
-                # Try update first
-                existing = await db.get(model, clean["id"])
-                if existing:
-                    for k, v in clean.items():
-                        if k not in ("id", "created_at"):
-                            setattr(existing, k, v)
-                else:
-                    db.add(model(**clean))
+                # Use a savepoint so a failed row doesn't poison the session
+                async with db.begin_nested():
+                    existing = await db.get(model, clean["id"])
+                    if existing:
+                        for k, v in clean.items():
+                            if k not in ("id", "created_at"):
+                                setattr(existing, k, v)
+                    else:
+                        db.add(model(**clean))
 
                 upserted += 1
 
@@ -147,11 +148,13 @@ async def sync_push(
                 errors.append(
                     f"{table_name}/{row.get('id', '?')}: {ex}")
 
-    try:
-        await db.commit()
-    except Exception as ex:
-        errors.append(f"commit: {ex}")
-        await db.rollback()
+        # Commit after each table so a later table's failure
+        # can't roll back earlier ones
+        try:
+            await db.commit()
+        except Exception as ex:
+            errors.append(f"commit:{table_name}: {ex}")
+            await db.rollback()
 
     return SyncPushResponse(
         status="ok" if not errors else "partial",
