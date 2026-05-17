@@ -66,7 +66,7 @@ class SplashView:
             [
                 ft.Container(
                     expand=True,
-                    bgcolor="#0F1E3A",      # dashboard navy
+                    bgcolor="#0F1E3A",
                     content=ft.Column(
                         [
                             ft.Container(expand=True),   # top spacer
@@ -118,7 +118,7 @@ class SplashView:
 
     # ──────────────────────────────────────────────────────────────────
     def _run(self):
-        """Fade everything in, animate the bar, then navigate to login."""
+        """Fade everything in, animate the bar, then navigate."""
         try:
             # Short pause so the view has time to render before animating
             time.sleep(0.15)
@@ -141,10 +141,16 @@ class SplashView:
                 self.page.update()
                 time.sleep(step_time)
 
-            # Navigate to login
+            # Navigate based on whether a session exists
             self.app._splash_running = False
-            self.page.go("/login")
+            if self.app.current_user:
+                self.page.go("/dashboard")
+            else:
+                self.page.go("/login")
 
         except Exception as ex:
             print(f"Splash error: {ex}")
-            self.page.go("/login")
+            if self.app.current_user:
+                self.page.go("/dashboard")
+            else:
+                self.page.go("/login")
